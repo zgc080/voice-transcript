@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>錄音逐字稿</title>
+<style>
+  body { margin: 0; min-height: 100vh; background: #f0f4f8; display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: sans-serif; padding: 24px; box-sizing: border-box; }
+  h1 { font-size: 28px; font-weight: bold; margin-bottom: 32px; color: #1a202c; }
+  #btn { width: 160px; height: 160px; border-radius: 50%; border: none; cursor: pointer; background: #3182ce; color: white; font-size: 20px; font-weight: bold; box-shadow: 0 4px 16px rgba(49,130,206,0.4); transition: all 0.2s; }
+  #btn.recording { background: #e53e3e; box-shadow: 0 0 0 8px rgba(229,62,62,0.3); }
+  #status { margin-top: 12px; font-size: 16px; font-weight: bold; color: #e53e3e; min-height: 24px; }
+  #box { margin-top: 24px; width: 100%; max-width: 600px; background: white; border-radius: 12px; padding: 20px; min-height: 150px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); font-size: 16px; line-height: 1.8; color: #1a202c; box-sizing: border-box; }
+  #placeholder { color: #a0aec0; text-align: center; margin-top: 40px; }
+  #interim { color: #a0aec0; }
+  #dlBtn { display: none; margin-top: 16px; padding: 10px 28px; border-radius: 8px; border: none; background: #6b46c1; color: white; font-size: 16px; font-weight: bold; cursor: pointer; }
+  #syncMsg { margin-top: 12px; font-size: 15px; min-height: 24px; }
+</style>
+</head>
+<body>
+<h1>錄音逐字稿</h1>
+<button id="btn" onclick="toggle()">開始錄音</button>
+<div id="status"></div>
+<div id="box">
+  <span id="final"></span><span id="interim"></span>
+  <div id="placeholder">逐字稿將顯示於此...</div>
+</div>
+<button id="dlBtn" onclick="download()">⬇️ 下載逐字稿 (.txt)</button>
+<div id="syncMsg"></div>
+<script>
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz_UQNCbfq7_C7bBLsz0y4fdfwRBzxZp8fOzYA8-Xhu5HPte_HVkncbWUz7EPAGUet5MA/exec';
+let rec, isRecording = false, finalText = '';
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+if (SR) {
+  rec = new SR();
+  rec.lang = 'zh-TW';
+  rec.continuous = true;
+  rec.interimResults = true;
+  rec.onresult = e => {
+    let f = '', i = '';
+    for (let j = e.resultIndex; j < e.results.length; j++) {
+      if (e.results[j].isFinal) f += e.results[j][0].transcript;
+      else i += e.results[j][0].transcript;
+    }
+    if (f) { finalText += f; document.getElementById('final').textContent = finalText; }
+    document.getElementById('interim').textContent = i;
+    document.getElementById('placeholder').style.display = 'none';
+  };
+  rec.onend = () => { if (isRecording) rec.start(); };
+} else {
+  alert('您的瀏覽器不支援語音辨識，請使用 Chrome 或 Edge。');
+}
+function toggle() {
+  if (!isRecording) {
+    finalText = '';
+    document.getElementById('final').textContent = '';
+    document.getElementById('interim').textContent = '';
+    document.getElementById('placeholder').style.display = 'block';
+    document.getElementById('syncMsg').textContent = '';
+    document.getElementById('dlBtn').style.display = 'none';
+    document.getElementById('btn').textContent = '錄音結束';
+    document.getElementById('btn').className = 'recording';
+    document.getElementById('status').textContent = '🔴 錄音中...';
+    rec.start();
+    isRecording = true;
+  } else {
+    isRecording = false;
+    rec.stop();
+    document.getElementById('btn').textContent = '開始錄音';
+    document.getElementById('btn').className = '';
+    document.getElementById('status').textContent = '';
+    if (finalText) {
+      document.getElementById('dlBtn').style.display = 'inline-block';
+      sync(finalText);
+    }
+  }
+}
+async function sync(text) {
+  document.getElementById('syncMsg').innerHTML = '<span style="color:#3182ce">⏳ 正同步至 Google 雲端...</span>';
+  try {
+    await fetch(SCRIPT_URL, {
+      method: 'POST', mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ filename: 'Note_' + Date.now() + '.txt', content: text })
+    });
+    document.getElementById('syncMsg').innerHTML = '<span style="color:#38a169">✅ 已儲存至 Google Drive！</span>';
+  } catch {
+    document.getElementById('syncMsg').innerHTML = '<span style="color:#e53e3e">❌ 同步失敗，請重試</span>';
+  }
+}
+function download() {
+  const blob = new Blob([finalText], { type: 'text/plain;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'Note_' + Date.now() + '.txt';
+  a.click();
+}
+</script>
+</body>
+</html>
