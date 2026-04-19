@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>語音翻譯</title>
+<title>語音翻譯+逐字稿</title>
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 body{margin:0;font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#f0f4f8;padding:16px;min-height:100vh}
@@ -45,12 +45,12 @@ h2{font-size:16px}
 <div class="text" id="text0">請按下方按鈕開始錄音...</div>
 <button class="btn btn-blue" id="btn0" onclick="toggle0()">🎤 開始錄音</button>
 </div>
-<button class="download" onclick="downloadTranscript()">💾 下載逐字稿</button>
+<button class="download" onclick="downloadTranscript('text0')">💾 下載逐字稿</button>
 </div>
 
 <div id="translate-mode" style="display:none">
 <div class="section">
-<h2>🗣️ 去本的語言</h2>
+<h2>🗣️ 說話原文 (逐字稿)</h2>
 <div class="lang">
 <button onclick="setLang1('zh-TW')" class="active" id="lang1-zh">🇹🇼 中文</button>
 <button onclick="setLang1('en-US')" id="lang1-en">🇬🇧 EN</button>
@@ -59,6 +59,7 @@ h2{font-size:16px}
 </div>
 <div class="text" id="text1">請按下方按鈕開始說話...</div>
 <button class="btn btn-blue" id="btn1" onclick="toggle1()">🔇 說話</button>
+<button class="download" style="margin-top:10px;height:40px;font-size:14px" onclick="downloadTranscript('text1')">💾 下載說話原文</button>
 </div>
 
 <div class="section">
@@ -71,23 +72,23 @@ h2{font-size:16px}
 </div>
 <div class="text" id="text2">翻譯內容將顯示於此...</div>
 <button class="btn btn-red" id="btn2" onclick="toggle2()">🔄 翻譯</button>
+<button class="download" style="margin-top:10px;height:40px;font-size:14px" onclick="downloadTranscript('text2')">💾 下載翻譯結果</button>
 </div>
 </div>
 
 <script>
-let currentMode='transcript';
 let lang1='zh-TW',lang2='en-US',rec0,rec1,speaking1=false,speaking2=false;
 const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
 if(!SR)alert('不支援語音辨識，請用 Chrome/Edge');
 
 function showMode(mode){
-currentMode=mode;
 document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-event.target.classList.add('active');
 if(mode==='transcript'){
+document.querySelectorAll('.tab')[0].classList.add('active');
 document.getElementById('transcript-mode').style.display='block';
 document.getElementById('translate-mode').style.display='none';
 }else{
+document.querySelectorAll('.tab')[1].classList.add('active');
 document.getElementById('transcript-mode').style.display='none';
 document.getElementById('translate-mode').style.display='block';
 }
@@ -103,9 +104,9 @@ rec0.onend=()=>{speaking1=false;btn0.textContent='🎤 開始錄音';btn0.classL
 rec0.start();
 }
 
-function downloadTranscript(){
-const t=text0.textContent;
-if(!t||t==='請按下方按鈕開始錄音...'){alert('沒有逐字稿內容');return}
+function downloadTranscript(id){
+const t=document.getElementById(id).textContent;
+if(!t||t.includes('請按下方')||t.includes('將顯示於此')){alert('沒有內容可下載');return}
 const blob=new Blob([t],{type:'text/plain;charset=utf-8'});
 const url=URL.createObjectURL(blob);
 const a=document.createElement('a');
