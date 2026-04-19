@@ -95,7 +95,7 @@ h2{font-size:16px}
 </div>
 
 <script>
-let lang1='zh-TW',lang2='en-US',rec0,rec1,speaking1=false,speaking2=false;
+let lang1='zh-TW',lang2='en-US',rec0,rec1,speaking0=false,speaking1=false,speaking2=false;
 let finalText0='', finalText1='';
 const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
 if(!SR)alert('不支援語音辨識，請用 Chrome/Edge/Safari');
@@ -120,12 +120,12 @@ if(id==='text1') finalText1='';
 }
 
 function toggle0(){
-if(speaking1){
-rec0.stop();speaking1=false;
+  if(speaking0){
+    rec0.stop();speaking0=false;
 btn0.textContent='🎤 開始錄音';btn0.classList.remove('active');
 return;
 }
-speaking1=true;btn0.textContent='⏹️ 停止錄音';btn0.classList.add('active');
+  speaking0=true;btn0.textContent='⏹️ 停止錄音';btn0.classList.add('active');
 rec0=new SR();rec0.lang='zh-TW';rec0.continuous=true;rec0.interimResults=true;
 rec0.onresult=e=>{
 let interim='';
@@ -139,11 +139,11 @@ interim=e.results[i][0].transcript;
 text0.textContent=(finalText0+interim)||'請按下方按鈕開始錄音...';
 };
 rec0.onerror=e=>text0.textContent='錯誤:'+e.error;
-rec0.onend=()=>{speaking1=false;btn0.textContent='🎤 開始錄音';btn0.classList.remove('active')};
 rec0.start();
+    rec0.onend=()=>{speaking0=false;btn0.textContent='🎤 開始錄音';btn0.classList.remove('active')};
 }
 
-function downloadTranscript(id){
+
 const t=document.getElementById(id).textContent;
 if(!t||t.includes('請按下方')||t.includes('將顯示於此')){alert('沒有內容可下載');return}
 const blob=new Blob([t],{type:'text/plain;charset=utf-8'});
