@@ -172,11 +172,9 @@ finalText1+=e.results[i][0].transcript+'\n';
 }else{
 interim=e.results[i][0].transcript;
 }
-}Restore index.html with help section and fixes
 text1.textContent=(finalText1+interim)||'請按下方按鈕開始說話...';
 };
 rec1.onerror=e=>text1.textContent='錯誤:'+e.error;
-rec1.onend=()=>{speaking1=false;btn1.textContent='🔇 說話';btn1.classList.remove('active')};
 rec1.start();
 }
 
